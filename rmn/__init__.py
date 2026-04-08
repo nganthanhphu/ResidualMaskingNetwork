@@ -1,4 +1,3 @@
-import glob
 import json
 import os
 
@@ -7,9 +6,7 @@ import numpy as np
 import torch
 from torchvision.transforms import transforms
 
-from models import densenet121, resmasking_dropout1
-
-from .version import __version__
+from models import resmasking_dropout1
 
 
 def show(img, name="disp", width=1000):
@@ -110,8 +107,7 @@ FER_2013_EMO_DICT = {
 is_cuda = torch.cuda.is_available()
 
 # load configs and set random seed
-package_root_dir = os.path.dirname(__file__)
-config_path = os.path.join(package_root_dir, "configs/fer2013_config.json")
+config_path = "./configs/fer2013_config.json"
 with open(config_path) as ref:
     configs = json.load(ref)
 
@@ -145,7 +141,7 @@ def convert_to_square(xmin, ymin, xmax, ymax):
 
 class RMN:
     def __init__(self, face_detector=True):
-        if face_detector is True:
+        if face_detector:
             self.face_detector = get_ssd_face_detector()
         self.emo_model = get_emo_model()
 

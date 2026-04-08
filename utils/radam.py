@@ -43,8 +43,8 @@ class RAdam(Optimizer):
                 exp_avg, exp_avg_sq = state["exp_avg"], state["exp_avg_sq"]
                 beta1, beta2 = group["betas"]
 
-                exp_avg_sq.mul_(beta2).addcmul_(1 - beta2, grad, grad)
-                exp_avg.mul_(beta1).add_(1 - beta1, grad)
+                exp_avg_sq.mul_(beta2).addcmul_(grad, grad, value=1 - beta2)
+                exp_avg.mul_(beta1).add_(grad, alpha=1 - beta1)
 
                 state["step"] += 1
                 buffered = self.buffer[int(state["step"] % 10)]
@@ -77,14 +77,16 @@ class RAdam(Optimizer):
                     buffered[2] = step_size
 
                 if group["weight_decay"] != 0:
-                    p_data_fp32.add_(-group["weight_decay"] * group["lr"], p_data_fp32)
+                    p_data_fp32.add_(
+                        p_data_fp32, alpha=-group["weight_decay"] * group["lr"]
+                    )
 
                 # more conservative since it's an approximated value
                 if N_sma >= 5:
                     denom = exp_avg_sq.sqrt().add_(group["eps"])
-                    p_data_fp32.addcdiv_(-step_size, exp_avg, denom)
+                    p_data_fp32.addcdiv_(exp_avg, denom, value=-step_size)
                 else:
-                    p_data_fp32.add_(-step_size, exp_avg)
+                    p_data_fp32.add_(exp_avg, alpha=-step_size)
 
                 p.data.copy_(p_data_fp32)
 
@@ -130,8 +132,8 @@ class PlainRAdam(Optimizer):
                 exp_avg, exp_avg_sq = state["exp_avg"], state["exp_avg_sq"]
                 beta1, beta2 = group["betas"]
 
-                exp_avg_sq.mul_(beta2).addcmul_(1 - beta2, grad, grad)
-                exp_avg.mul_(beta1).add_(1 - beta1, grad)
+                exp_avg_sq.mul_(beta2).addcmul_(grad, grad, value=1 - beta2)
+                exp_avg.mul_(beta1).add_(grad, alpha=1 - beta1)
 
                 state["step"] += 1
                 beta2_t = beta2 ** state["step"]
@@ -139,7 +141,9 @@ class PlainRAdam(Optimizer):
                 N_sma = N_sma_max - 2 * state["step"] * beta2_t / (1 - beta2_t)
 
                 if group["weight_decay"] != 0:
-                    p_data_fp32.add_(-group["weight_decay"] * group["lr"], p_data_fp32)
+                    p_data_fp32.add_(
+                        p_data_fp32, alpha=-group["weight_decay"] * group["lr"]
+                    )
 
                 # more conservative since it's an approximated value
                 if N_sma >= 5:
@@ -157,10 +161,10 @@ class PlainRAdam(Optimizer):
                         / (1 - beta1 ** state["step"])
                     )
                     denom = exp_avg_sq.sqrt().add_(group["eps"])
-                    p_data_fp32.addcdiv_(-step_size, exp_avg, denom)
+                    p_data_fp32.addcdiv_(exp_avg, denom, value=-step_size)
                 else:
                     step_size = group["lr"] / (1 - beta1 ** state["step"])
-                    p_data_fp32.add_(-step_size, exp_avg)
+                    p_data_fp32.add_(exp_avg, alpha=-step_size)
 
                 p.data.copy_(p_data_fp32)
 
@@ -212,8 +216,8 @@ class AdamW(Optimizer):
 
                 state["step"] += 1
 
-                exp_avg_sq.mul_(beta2).addcmul_(1 - beta2, grad, grad)
-                exp_avg.mul_(beta1).add_(1 - beta1, grad)
+                exp_avg_sq.mul_(beta2).addcmul_(grad, grad, value=1 - beta2)
+                exp_avg.mul_(beta1).add_(grad, alpha=1 - beta1)
 
                 denom = exp_avg_sq.sqrt().add_(group["eps"])
                 bias_correction1 = 1 - beta1 ** state["step"]
@@ -227,9 +231,9 @@ class AdamW(Optimizer):
                 step_size = group["lr"] * math.sqrt(bias_correction2) / bias_correction1
 
                 if group["weight_decay"] != 0:
-                    p_data_fp32.add_(-group["weight_decay"] * scheduled_lr, p_data_fp32)
+                    p_data_fp32.add_(p_data_fp32, alpha=-group["weight_decay"] * scheduled_lr)
 
-                p_data_fp32.addcdiv_(-step_size, exp_avg, denom)
+                p_data_fp32.addcdiv_(exp_avg, denom, value=-step_size)
 
                 p.data.copy_(p_data_fp32)
 

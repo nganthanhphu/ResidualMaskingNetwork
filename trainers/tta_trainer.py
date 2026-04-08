@@ -141,8 +141,7 @@ class FER2013Trainer(Trainer):
         self._scheduler = ReduceLROnPlateau(
             self._optimizer,
             patience=self._configs["plateau_patience"],
-            min_lr=1e-6,
-            verbose=True,
+            min_lr=1e-6
         )
 
         """ TODO set step size equal to configs

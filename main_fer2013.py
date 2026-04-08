@@ -21,7 +21,6 @@ torch.backends.cudnn.benchmark = False
 
 
 import models
-from models import segmentation
 
 
 def main(config_path):
@@ -65,10 +64,7 @@ def get_model(configs):
     configs : dict
         configs dictionary
     """
-    try:
-        return models.__dict__[configs["arch"]]
-    except KeyError:
-        return segmentation.__dict__[configs["arch"]]
+    return models.__dict__[configs["arch"]]
 
 
 def get_dataset(configs):
