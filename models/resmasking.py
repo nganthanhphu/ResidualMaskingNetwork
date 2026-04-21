@@ -13,6 +13,9 @@ class ResMasking(ResNet):
             in_channels=in_channels,
             num_classes=1000,
         )
+        
+        state_dict = load_state_dict_from_url("https://download.pytorch.org/models/resnet34-333f7ec4.pth", progress=True)
+        self.load_state_dict(state_dict)
 
         self.fc = nn.Linear(512, num_classes)
 
