@@ -3,7 +3,7 @@ import traceback
 import torch
 import torch.nn as nn
 
-from .resnet import BasicBlock, Bottleneck, conv1x1
+from .resnet import BasicBlock, conv1x1
 
 
 def up_pooling(in_channels, out_channels, kernel_size=2, stride=2):
@@ -110,9 +110,7 @@ class Masking4(nn.Module):
         # so that the residual branch starts with zeros, and each residual block behaves like an identity.
         # This improves the model by 0.2~0.3% according to https://arxiv.org/abs/1706.02677
         for m in self.modules():
-            if isinstance(m, Bottleneck):
-                nn.init.constant_(m.bn3.weight, 0)
-            elif isinstance(m, BasicBlock):
+            if isinstance(m, BasicBlock):
                 nn.init.constant_(m.bn2.weight, 0)
 
     def forward(self, x):
@@ -219,9 +217,7 @@ class Masking3(nn.Module):
         # so that the residual branch starts with zeros, and each residual block behaves like an identity.
         # This improves the model by 0.2~0.3% according to https://arxiv.org/abs/1706.02677
         for m in self.modules():
-            if isinstance(m, Bottleneck):
-                nn.init.constant_(m.bn3.weight, 0)
-            elif isinstance(m, BasicBlock):
+            if isinstance(m, BasicBlock):
                 nn.init.constant_(m.bn2.weight, 0)
 
     def forward(self, x):
@@ -303,9 +299,7 @@ class Masking2(nn.Module):
         # so that the residual branch starts with zeros, and each residual block behaves like an identity.
         # This improves the model by 0.2~0.3% according to https://arxiv.org/abs/1706.02677
         for m in self.modules():
-            if isinstance(m, Bottleneck):
-                nn.init.constant_(m.bn3.weight, 0)
-            elif isinstance(m, BasicBlock):
+            if isinstance(m, BasicBlock):
                 nn.init.constant_(m.bn2.weight, 0)
 
     def forward(self, x):
@@ -356,9 +350,7 @@ class Masking1(nn.Module):
         # so that the residual branch starts with zeros, and each residual block behaves like an identity.
         # This improves the model by 0.2~0.3% according to https://arxiv.org/abs/1706.02677
         for m in self.modules():
-            if isinstance(m, Bottleneck):
-                nn.init.constant_(m.bn3.weight, 0)
-            elif isinstance(m, BasicBlock):
+            if isinstance(m, BasicBlock):
                 nn.init.constant_(m.bn2.weight, 0)
 
     def forward(self, x):

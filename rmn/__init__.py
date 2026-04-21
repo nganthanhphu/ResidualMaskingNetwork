@@ -1,4 +1,3 @@
-import json
 import os
 
 import cv2
@@ -106,12 +105,7 @@ FER_2013_EMO_DICT = {
 
 is_cuda = torch.cuda.is_available()
 
-# load configs and set random seed
-config_path = "./configs/fer2013_config.json"
-with open(config_path) as ref:
-    configs = json.load(ref)
-
-image_size = (configs["image_size"], configs["image_size"])
+image_size = (224, 224)
 
 
 def get_emo_model():

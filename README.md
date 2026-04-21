@@ -124,13 +124,14 @@ We also benchmark our model on ImageNet dataset.
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1IEQ091jBeJrOKHJe4wNhodH-bUGbLHSE?usp=sharing)
 
-To train the networks, you need to specify the model name and other hyperparameters in the config file (located at configs/\*) then ensure it is loaded in main file, then run training procedure by simply run main file, for example:
+To train the FER2013 model, all data and hyperparameters are now defined directly in `train.py`.
+Update the `TrainConfig` values in that file, then run:
 
 ```Shell
-python main_fer.py  # Example for fer2013_config.json file
+python train.py
 ```
 
-The best checkpoints will chosen at term of best validation accuracy, located at `saved/checkpoints`. By default, it will train `alexnet` model, you can switch to another model by edit `configs/fer2013_config.json` file (to `resnet18` or `cbam_resnet50` or my network `resmasking_dropout1`.
+The best checkpoint is selected by validation accuracy and stored in `checkpoint/`. TensorBoard logs are written to `log/`.
 
 
 <p id="train_imagenet"></p>
