@@ -3,6 +3,7 @@ import torch.nn as nn
 
 from .masking import masking
 from .resnet import BasicBlock, ResNet
+from .utils import load_state_dict_from_url
 
 
 class ResMasking(ResNet):
