@@ -243,7 +243,7 @@ def train(
     lr=1e-4,
     weight_decay=1e-3,
     batch_size=48,
-    num_workers=8,
+    num_workers=2,
     device_name="cuda:0",
     max_epoch_num=50,
     max_plateau_count=8,
