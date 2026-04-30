@@ -4,6 +4,7 @@ import random
 
 import cv2
 import imgaug
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import torch
@@ -19,6 +20,17 @@ from models import resmasking_dropout1
 from utils.augmenters.augment import seg
 from utils.metrics.metrics import accuracy
 from utils.radam import RAdam
+
+
+FER_2013_EMO_DICT = {
+    0: "angry",
+    1: "disgust",
+    2: "fear",
+    3: "happy",
+    4: "sad",
+    5: "surprise",
+    6: "neutral",
+}
 
 
 class FER2013Dataset(Dataset):
@@ -144,6 +156,28 @@ def build_dataloaders(train_set, val_set, test_set, batch_size, num_workers, use
         )
 
     return train_loader, val_loader, test_loader
+
+
+def visualize_dataset(data_path):
+    stages = ("train", "val", "test")
+    class_ids = list(FER_2013_EMO_DICT.keys())
+    class_labels = [FER_2013_EMO_DICT[class_id] for class_id in class_ids]
+    counts = pd.Series(0, index=class_ids, dtype=np.int64)
+
+    for stage in stages:
+        csv_path = os.path.join(data_path, f"{stage}.csv")
+        df = pd.read_csv(csv_path)
+        stage_counts = df["emotion"].value_counts()
+        counts = counts.add(stage_counts, fill_value=0).astype(int)
+
+    plt.figure(figsize=(8, 4))
+    plt.bar(class_labels, counts.values)
+    plt.title("Class Distribution")
+    plt.xlabel("Emotion")
+    plt.ylabel("Samples")
+    plt.xticks(rotation=20)
+    plt.tight_layout()
+    plt.show()
 
 
 def train_one_epoch(model, loader, criterion, optimizer, device):
@@ -426,4 +460,6 @@ def train(
 
 
 if __name__ == "__main__":
+    visualize_dataset(data_path="data")
+
     train()
