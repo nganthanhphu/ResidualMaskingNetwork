@@ -15,6 +15,7 @@ from torch.utils.data import DataLoader, Dataset
 from torch.utils.tensorboard import SummaryWriter
 from torchvision import transforms
 from tqdm import tqdm
+from sklearn.metrics import ConfusionMatrixDisplay, confusion_matrix
 
 from models import resmasking_dropout1
 from utils.augmenters.augment import seg
@@ -459,7 +460,74 @@ def train(
     print(f"Test accuracy: {test_acc:.3f}")
 
 
-if __name__ == "__main__":
-    visualize_dataset(data_path="data")
+def eval_test_with_tta_conf_matrix(checkpoint_path):
 
+    checkpoint = torch.load(checkpoint_path)
+    config = checkpoint.get("config")
+
+    data_path = config.get("data_path")
+    image_size = config.get("image_size")
+    device_name = config.get("device_name")
+    use_tta = config.get("use_tta")
+    tta_size = config.get("tta_size")
+
+    if not use_tta:
+        raise Exception
+
+    device = resolve_device(device_name)
+
+    model = resmasking_dropout1(
+        in_channels=3,
+        num_classes=7,
+    ).to(device)
+    model.load_state_dict(checkpoint["net"])
+    model.eval()
+
+    _, _, test_set = build_datasets(
+        data_path=data_path,
+        image_size=image_size,
+        use_tta=True,
+        tta_size=tta_size,
+    )
+
+    y_true = []
+    y_pred = []
+
+    total_acc = 0.0
+    with torch.no_grad():
+        for idx in tqdm(range(len(test_set)), total=len(test_set), leave=False):
+            images, target = test_set[idx]
+            images = torch.stack(images, dim=0).to(device, non_blocking=True)
+            target = torch.LongTensor([target]).to(device, non_blocking=True)
+
+            outputs = model(images)
+            outputs = F.softmax(outputs, dim=1)
+            outputs = torch.sum(outputs, dim=0, keepdim=True)
+            pred = torch.argmax(outputs, dim=1).item()
+
+            acc = accuracy(outputs, target)[0]
+            total_acc += acc.item()
+
+            y_true.append(int(target))
+            y_pred.append(int(pred))
+
+    class_ids = list(FER_2013_EMO_DICT.keys())
+    class_labels = [FER_2013_EMO_DICT[class_id] for class_id in class_ids]
+    cm = confusion_matrix(y_true, y_pred, labels=class_ids)
+
+    acc = total_acc / len(test_set) if len(test_set) > 0 else 0.0
+    print(f"Test accuracy: {acc:.3f}")
+
+    fig, ax = plt.subplots(figsize=(8, 8))
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=class_labels)
+    disp.plot(ax=ax, cmap="Blues", colorbar=True, values_format="d")
+    ax.set_title("Confusion Matrix")
+    plt.xticks(rotation=45, ha="right")
+    plt.tight_layout()
+    plt.show()
+
+
+if __name__ == "__main__":
+    # visualize_dataset(data_path="data")
+    # eval_test_with_tta_conf_matrix("checkpoint/branch1.pt")
     train()
